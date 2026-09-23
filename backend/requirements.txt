@@ -2,7 +2,7 @@ fastapi==0.115.0
 uvicorn[standard]==0.32.0
 python-multipart==0.0.12
 sqlalchemy==2.0.36
-pydantic==2.9.2
+pydantic==2.10.6
 pydantic-settings==2.6.1
 tensorflow-cpu
 numpy>=2.3
