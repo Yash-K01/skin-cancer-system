@@ -43,5 +43,5 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-settings.ALLOWED_ORIGINS = _parse_origins(settings.CORS_ORIGINS)
+settings_cors_list = _parse_origins(settings.CORS_ORIGINS)
 Path(settings.UPLOAD_DIR).mkdir(exist_ok=True, parents=True)
