@@ -1,11 +1,26 @@
-from pydantic_settings import BaseSettings
-from pathlib import Path
 import os
+from pathlib import Path
+from pydantic_settings import BaseSettings
+
+
+def _parse_origins(val: str) -> list:
+    if not val:
+        return ["*"]
+    val = val.strip()
+    if val.startswith("["):
+        # JSON list
+        import json
+        try:
+            return json.loads(val)
+        except Exception:
+            pass
+    # Comma-separated
+    return [x.strip() for x in val.split(",") if x.strip()]
 
 
 class Settings(BaseSettings):
-    MODEL_7CLASS: str = "models/densenet121_7class.keras"
-    MODEL_BINARY: str = "models/densenet201_binary.keras"
+    MODEL_7CLASS: str = os.getenv("MODEL_7CLASS", "models/densenet121_7class.keras")
+    MODEL_BINARY: str = os.getenv("MODEL_BINARY", "models/densenet201_binary.keras")
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
     IMG_SIZE: int = 224
 
@@ -20,32 +35,14 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = os.getenv("SECRET_KEY", "change-this-in-production")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
-    ALLOWED_ORIGINS: list = os.getenv(
-        "ALLOWED_ORIGINS",
-        '["http://localhost:5173","http://localhost:3000"]'
-    ) if isinstance(os.getenv("ALLOWED_ORIGINS"), str) else ["*"]
+    ALLOWED_ORIGINS: list = _parse_origins(os.getenv("ALLOWED_ORIGINS", "*"))
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 
-# Parse ALLOWED_ORIGINS from JSON string if provided via env
-import json
-_orig = os.getenv("ALLOWED_ORIGINS")
-if _orig:
-    try:
-        _parsed = json.loads(_orig)
-    except Exception:
-        _parsed = ["*"]
-else:
-    _parsed = ["http://localhost:5173", "http://localhost:3000", "*"]
-
-
-class SettingsWithCORS(Settings):
-    ALLOWED_ORIGINS: list = _parsed
-
-
-settings = SettingsWithCORS()
+settings = Settings()
 Path(settings.UPLOAD_DIR).mkdir(exist_ok=True, parents=True)
