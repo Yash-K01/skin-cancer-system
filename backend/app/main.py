@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, engine
 from app.ml.loader import load_models
 from app.routers import auth, predict, feedback, new_case, admin
-from app.config import settings
+from app.config import settings, settings_cors_list
 
 
 @asynccontextmanager
