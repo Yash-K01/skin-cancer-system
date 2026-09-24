@@ -1,29 +1,34 @@
 import os
-import tensorflow as tf
+from ai_edge_litert.interpreter import Interpreter
 from app.config import settings
 
-_models = {}
+_interpreters = {}
+
+
+def _load_one(name: str):
+    if name in _interpreters:
+        return _interpreters[name]
+
+    path = settings.MODEL_7CLASS if name == "7class" else settings.MODEL_BINARY
+    if not os.path.exists(path):
+        raise RuntimeError(f"Model not found: {path}")
+
+    interp = Interpreter(model_path=path)
+    interp.allocate_tensors()   # required before any inference
+    _interpreters[name] = {
+        "interpreter": interp,
+        "input": interp.get_input_details(),
+        "output": interp.get_output_details(),
+    }
+    return _interpreters[name]
 
 
 def load_models():
-    if os.path.exists(settings.MODEL_7CLASS):
-        _models["7class"] = tf.keras.models.load_model(
-            settings.MODEL_7CLASS, compile=False)
-        print(f"[loader] Loaded 7-class: {settings.MODEL_7CLASS}")
-    else:
-        print(f"[loader] WARNING: {settings.MODEL_7CLASS} not found")
-
-    if os.path.exists(settings.MODEL_BINARY):
-        _models["binary"] = tf.keras.models.load_model(
-            settings.MODEL_BINARY, compile=False)
-        print(f"[loader] Loaded binary: {settings.MODEL_BINARY}")
-    else:
-        print(f"[loader] WARNING: {settings.MODEL_BINARY} not found")
-
-    return _models
+    """Just verify the files exist — lazy load on first request."""
+    for name, p in [("7class", settings.MODEL_7CLASS),
+                    ("binary", settings.MODEL_BINARY)]:
+        print(f"[loader] {name}: {'OK' if os.path.exists(p) else 'MISSING'} {p}")
 
 
 def get_model(name: str):
-    if name not in _models:
-        raise RuntimeError(f"Model '{name}' not loaded.")
-    return _models[name]
+    return _load_one(name)

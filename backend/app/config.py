@@ -25,8 +25,8 @@ def _fix_db_url(url: str) -> str:
 
 
 class Settings(BaseSettings):
-    MODEL_7CLASS: str = "models/densenet121_7class.keras"
-    MODEL_BINARY: str = "models/densenet201_binary.keras"
+    MODEL_7CLASS: str = "models/densenet121_7class.tflite"  
+    MODEL_BINARY: str = "models/densenet201_binary.tflite"
     UPLOAD_DIR: str = "uploads"
     IMG_SIZE: int = 224
 

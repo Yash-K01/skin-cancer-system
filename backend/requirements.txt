@@ -4,11 +4,12 @@ python-multipart==0.0.12
 sqlalchemy==2.0.36
 pydantic==2.10.6
 pydantic-settings==2.6.1
-tensorflow-cpu
-numpy>=2.3
+email-validator==2.2.0
+ai-edge-litert
+numpy
 pillow==11.0.0
 opencv-python-headless==4.10.0.84
 python-jose[cryptography]==3.3.0
+passlib==1.7.4
 bcrypt==4.0.1
 psycopg2-binary==2.9.10
-email-validator==2.2.0
