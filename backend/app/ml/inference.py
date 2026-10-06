@@ -1,6 +1,7 @@
 import base64
 import cv2
 import numpy as np
+from app.ml.validation import validate_image, check_ood
 from app.config import settings
 from app.ml.loader import get_model
 from app.ml.uncertainty import uncertainty_report
@@ -13,25 +14,27 @@ def _preprocess(image_path):
     raw = cv2.cvtColor(raw, cv2.COLOR_BGR2RGB)
     raw = cv2.resize(raw, (settings.IMG_SIZE, settings.IMG_SIZE))
     arr = raw.astype(np.float32)
-    # DenseNet preprocessing: scale to [-1, 1] via keras.applications.densenet
-    # For TFLite we reproduce it manually: (x / 127.5) - 1
+    # DenseNet preprocessing: (x / 127.5) - 1  -> [-1, 1]
     arr = (arr / 127.5) - 1.0
     return raw, np.expand_dims(arr, axis=0).astype(np.float32)
 
 
 def _run(interp_data, arr):
+    """Run inference; return (probs, features_or_None)."""
     interp = interp_data["interpreter"]
-    inp = interp_data["input"][0]
-    out = interp_data["output"][0]
-    interp.set_tensor(inp["index"], arr)
+    interp.set_tensor(interp_data["input"][0]["index"], arr)
     interp.invoke()
-    return interp.get_tensor(out["index"])[0]
+    probs = interp.get_tensor(interp_data["pred_out"]["index"])[0]
+    feat = None
+    if interp_data.get("feat_out") is not None:
+        feat = interp.get_tensor(interp_data["feat_out"]["index"])[0]
+    return probs, feat
 
 
 def predict_7class(image_path):
     data = get_model("7class")
     raw, arr = _preprocess(image_path)
-    probs = _run(data, arr)
+    probs, _ = _run(data, arr)
 
     cls_idx = int(np.argmax(probs))
     predicted = settings.CLASS_NAMES_7[cls_idx]
@@ -49,7 +52,7 @@ def predict_7class(image_path):
 def predict_binary(image_path):
     data = get_model("binary")
     raw, arr = _preprocess(image_path)
-    probs = _run(data, arr)
+    probs, _ = _run(data, arr)
 
     cls_idx = int(np.argmax(probs))
     label = ["Benign", "Malignant"][cls_idx]
@@ -65,7 +68,7 @@ def predict_binary(image_path):
 def occlusion_sensitivity(image_path, patch=32, stride=16, model_name="7class"):
     data = get_model(model_name)
     raw, arr = _preprocess(image_path)
-    base_pred = _run(data, arr)
+    base_pred, _ = _run(data, arr)
     pred_class = int(np.argmax(base_pred))
     base_p = base_pred[pred_class]
 
@@ -76,8 +79,8 @@ def occlusion_sensitivity(image_path, patch=32, stride=16, model_name="7class"):
         for x in range(0, w - patch + 1, stride):
             occl = arr.copy()
             occl[0, y:y+patch, x:x+patch] = 0.0
-            p = _run(data, occl)[pred_class]
-            sal[y:y+patch, x:x+patch] = base_p - p
+            p, _ = _run(data, occl)
+            sal[y:y+patch, x:x+patch] = base_p - p[pred_class]
 
     sal = np.maximum(sal, 0)
     sal = sal / (sal.max() + 1e-8)
@@ -96,3 +99,23 @@ def occlusion_sensitivity(image_path, patch=32, stride=16, model_name="7class"):
         "predicted_class_idx": pred_class,
         "base_confidence": float(base_p),
     }
+
+
+def predict_7class_with_gate(image_path):
+    """Runs quality, skin-tone, and OOD gates before prediction.
+    Raises ValueError on reject."""
+    # Gate 1 + 2
+    ok, stage, msg = validate_image(image_path)
+    if not ok:
+        raise ValueError(f"[{stage}] {msg}")
+
+    # Gate 3 — OOD (requires feature output from the multi-output TFLite)
+    data = get_model("7class")
+    raw, arr = _preprocess(image_path)
+    _, feat = _run(data, arr)
+    if feat is not None:
+        ok, msg = check_ood(feat)
+        if not ok:
+            raise ValueError(f"[out_of_distribution] {msg}")
+
+    return predict_7class(image_path)

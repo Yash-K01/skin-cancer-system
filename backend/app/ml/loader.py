@@ -14,17 +14,40 @@ def _load_one(name: str):
         raise RuntimeError(f"Model not found: {path}")
 
     interp = Interpreter(model_path=path)
-    interp.allocate_tensors()   # required before any inference
+    interp.allocate_tensors()
+
+    inputs  = interp.get_input_details()
+    outputs = interp.get_output_details()
+
+    pred_out = None
+    feat_out = None
+
+    for o in outputs:
+        last_dim = int(o["shape"][-1])
+        if last_dim == 1024:                          # 7-class model features
+            feat_out = o
+        elif last_dim == len(settings.CLASS_NAMES_7): # 7-class predictions
+            pred_out = o
+
+    # Binary model has only one output (2 classes)
+    if pred_out is None and len(outputs) == 1:
+        pred_out = outputs[0]
+
+    # Fallback: if nothing matched, assume output 0 is predictions
+    if pred_out is None:
+        pred_out = outputs[0]
+
     _interpreters[name] = {
         "interpreter": interp,
-        "input": interp.get_input_details(),
-        "output": interp.get_output_details(),
+        "input": inputs,
+        "output": outputs,
+        "pred_out": pred_out,
+        "feat_out": feat_out,   # None for the binary model
     }
     return _interpreters[name]
 
 
 def load_models():
-    """Just verify the files exist — lazy load on first request."""
     for name, p in [("7class", settings.MODEL_7CLASS),
                     ("binary", settings.MODEL_BINARY)]:
         print(f"[loader] {name}: {'OK' if os.path.exists(p) else 'MISSING'} {p}")
