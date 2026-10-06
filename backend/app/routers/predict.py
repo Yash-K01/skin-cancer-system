@@ -1,6 +1,7 @@
 import os
 import uuid
 import shutil
+import numpy as np
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -77,3 +78,58 @@ def explain_7class(file: UploadFile = File(...),
                    user: User = Depends(get_current_user)):
     path = _save_upload(file)
     return occlusion_sensitivity(path, model_name="7class")
+
+@router.post("/debug/validate")
+def debug_validate(file: UploadFile = File(...)):
+    """Temporary: shows the raw scores of every gate."""
+    from app.ml.validation import check_image_quality, check_skin_like_colors, check_ood
+    from app.ml.inference import _preprocess, _run
+    from app.ml.loader import get_model
+    import os, uuid, shutil
+    from app.config import settings
+
+    # Save upload
+    ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
+    name = f"debug_{uuid.uuid4().hex}{ext}"
+    path = os.path.join(settings.UPLOAD_DIR, name)
+    with open(path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    # Gate 1
+    ok1, msg1 = check_image_quality(path)
+    # Gate 2
+    ok2, msg2 = check_skin_like_colors(path)
+
+    # Gate 3
+    data = get_model("7class")
+    _, arr = _preprocess(path)
+    probs, feat = _run(data, arr)
+
+    ood_result = None
+    if feat is not None:
+        from app.ml.validation import _load_ood
+        mean, prec = _load_ood()
+        if mean is not None:
+            delta = feat - mean
+            score = float(np.einsum("i,ij,j->", delta, prec, delta))
+            ok3, msg3 = check_ood(feat)
+            ood_result = {
+                "score": score,
+                "ok": ok3,
+                "msg": msg3,
+                "threshold": 6000.0,
+            }
+        else:
+            ood_result = {"error": "ood_mean.npy / ood_precision.npy not found"}
+    else:
+        ood_result = {"error": "feat_out is None — old single-output tflite deployed"}
+
+    return {
+        "quality": {"ok": ok1, "msg": msg1},
+        "skin_tone": {"ok": ok2, "msg": msg2},
+        "ood": ood_result,
+        "prediction": {
+            "class": settings.CLASS_NAMES_7[int(np.argmax(probs))],
+            "confidence": float(probs.max()),
+        },
+    }
