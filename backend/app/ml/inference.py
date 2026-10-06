@@ -102,19 +102,19 @@ def occlusion_sensitivity(image_path, patch=32, stride=16, model_name="7class"):
 
 
 def predict_7class_with_gate(image_path):
-    """Runs quality, skin-tone, and OOD gates before prediction.
-    Raises ValueError on reject."""
-    # Gate 1 + 2
+    print("[gate] starting validation")
     ok, stage, msg = validate_image(image_path)
+    print(f"[gate] quality+skin result: ok={ok} stage={stage} msg={msg}")
     if not ok:
         raise ValueError(f"[{stage}] {msg}")
 
-    # Gate 3 — OOD (requires feature output from the multi-output TFLite)
     data = get_model("7class")
     raw, arr = _preprocess(image_path)
     _, feat = _run(data, arr)
+    print(f"[gate] feature vector present: {feat is not None}")
     if feat is not None:
         ok, msg = check_ood(feat)
+        print(f"[gate] OOD result: ok={ok} msg={msg}")
         if not ok:
             raise ValueError(f"[out_of_distribution] {msg}")
 
