@@ -6,7 +6,8 @@ from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Prediction, User
-from app.ml.inference import predict_7class, predict_binary, occlusion_sensitivity
+from app.ml.inference import (predict_7class_with_gate, predict_binary,
+                              occlusion_sensitivity)
 from app.routers.auth import get_current_user
 from app.config import settings
 
@@ -28,7 +29,9 @@ def classify_7class(file: UploadFile = File(...),
                     user: User = Depends(get_current_user)):
     path = _save_upload(file)
     try:
-        result = predict_7class(path)
+        result = predict_7class_with_gate(path)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except Exception as e:
         raise HTTPException(500, f"Inference failed: {e}")
 
@@ -79,28 +82,23 @@ def explain_7class(file: UploadFile = File(...),
     path = _save_upload(file)
     return occlusion_sensitivity(path, model_name="7class")
 
+
 @router.post("/debug/validate")
 def debug_validate(file: UploadFile = File(...)):
     """Temporary: shows the raw scores of every gate."""
     from app.ml.validation import check_image_quality, check_skin_like_colors, check_ood
     from app.ml.inference import _preprocess, _run
     from app.ml.loader import get_model
-    import os, uuid, shutil
-    from app.config import settings
 
-    # Save upload
     ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
     name = f"debug_{uuid.uuid4().hex}{ext}"
     path = os.path.join(settings.UPLOAD_DIR, name)
     with open(path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    # Gate 1
     ok1, msg1 = check_image_quality(path)
-    # Gate 2
     ok2, msg2 = check_skin_like_colors(path)
 
-    # Gate 3
     data = get_model("7class")
     _, arr = _preprocess(path)
     probs, feat = _run(data, arr)
