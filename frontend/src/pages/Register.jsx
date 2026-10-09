@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { registerUser } from "../api/endpoints";
+import Logo from "../components/Logo";
+import AuthBrand from "../components/AuthBrand";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -30,50 +32,60 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1>Create Account</h1>
-        <p className="subtitle">Doctor Registration</p>
+    <div className="auth-split">
+      <AuthBrand />
 
-        {error && <div className="error">{error}</div>}
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-logo-mobile">
+            <Logo size={48} />
+          </div>
+          <h1>Create Account</h1>
+          <p className="subtitle">Doctor Registration</p>
 
-        <form onSubmit={handleSubmit}>
-          <label>
-            Full Name
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Email
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </label>
-          <button type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Register"}
-          </button>
-        </form>
+          {error && <div className="error">{error}</div>}
 
-        <p className="footer">
-          Already have an account? <Link to="/login">Sign in</Link>
-        </p>
+          <form onSubmit={handleSubmit}>
+            <label>
+              Full Name
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Dr. Jane Doe"
+                required
+              />
+            </label>
+            <label>
+              Email
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="doctor@hospital.com"
+                required
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Minimum 6 characters"
+                required
+                minLength={6}
+              />
+            </label>
+            <button type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Register"}
+            </button>
+          </form>
+
+          <p className="footer">
+            Already have an account? <Link to="/login">Sign in</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

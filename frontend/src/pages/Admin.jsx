@@ -6,6 +6,7 @@ import {
   getRetrainingQueue,
   triggerRetrain,
 } from "../api/endpoints";
+import Logo from "../components/Logo";
 
 export default function Admin() {
   const [pending, setPending] = useState([]);
@@ -42,25 +43,39 @@ export default function Admin() {
   return (
     <div className="page">
       <header className="topbar">
-        <h1>Admin Panel</h1>
+        <h1 className="brand">
+          <Logo size={34} />
+          <span>Admin Panel</span>
+        </h1>
         <Link to="/predict" className="link-btn">Back</Link>
       </header>
 
       <main className="admin-layout">
+        <div className="stats">
+          <div className="stat">
+            <span className="stat-num">{pending.length}</span>
+            <span className="stat-label">Pending cases</span>
+          </div>
+          <div className="stat">
+            <span className="stat-num">{queue.length}</span>
+            <span className="stat-label">In retraining queue</span>
+          </div>
+        </div>
+
         <section className="card">
           <h2>Pending New Cases</h2>
           {loading && <p>Loading...</p>}
           {pending.length === 0 && <p>No pending cases.</p>}
           {pending.map((c) => (
             <div key={c.id} className="case-row">
-              <span>Case #{c.id}</span>
-              <span>{c.label}</span>
               <img
                 src={`http://127.0.0.1:8000/uploads/${c.image.split(/[\\/]/).pop()}`}
                 alt="case"
                 className="thumb"
                 onError={(e) => { e.target.style.display = "none"; }}
               />
+              <span className="case-id">Case #{c.id}</span>
+              <span className="case-label">{c.label}</span>
               <button onClick={() => handleApprove(c.id)}>Approve</button>
             </div>
           ))}

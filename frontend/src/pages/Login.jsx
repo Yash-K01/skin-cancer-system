@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../components/Logo";
+import AuthBrand from "../components/AuthBrand";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -25,40 +27,49 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1>Skin Cancer Detection</h1>
-        <p className="subtitle">Doctor Login</p>
+    <div className="auth-split">
+      <AuthBrand />
 
-        {error && <div className="error">{error}</div>}
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-logo-mobile">
+            <Logo size={48} />
+          </div>
+          <h1>Skin Cancer Detection</h1>
+          <p className="subtitle">Doctor Login</p>
 
-        <form onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </label>
-          <button type="submit" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
+          {error && <div className="error">{error}</div>}
 
-        <p className="footer">
-          No account? <Link to="/register">Register</Link>
-        </p>
+          <form onSubmit={handleSubmit}>
+            <label>
+              Email
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="doctor@hospital.com"
+                required
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </label>
+            <button type="submit" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+
+          <p className="footer">
+            No account? <Link to="/register">Register</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

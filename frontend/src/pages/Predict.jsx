@@ -8,6 +8,7 @@ import {
   submitFeedback,
 } from "../api/endpoints";
 import ProbabilityChart from "../components/ProbabilityChart";
+import Logo from "../components/Logo";
 
 export default function Predict() {
   const { user, logout } = useAuth();
@@ -83,9 +84,12 @@ export default function Predict() {
   return (
     <div className="page">
       <header className="topbar">
-        <h1>Skin Cancer Detection</h1>
+        <h1 className="brand">
+          <Logo size={34} />
+          <span>Skin Cancer Detection</span>
+        </h1>
         <div>
-          <span>{user?.email}</span>
+          <span className="user-chip">{user?.email}</span>
           {user?.role === "admin" && (
             <Link to="/admin" className="link-btn">Admin</Link>
           )}
@@ -134,8 +138,10 @@ export default function Predict() {
             </button>
           </div>
 
-          {preview && (
+          {preview ? (
             <img src={preview} alt="preview" className="preview" />
+          ) : (
+            <div className="preview-empty">No image selected</div>
           )}
 
           <div className="actions">
@@ -150,6 +156,13 @@ export default function Predict() {
 
         <section className="result-panel">
           {error && <div className="error">{error}</div>}
+
+          {!result && !binaryResult && !error && (
+            <div className="card empty-state">
+              <Logo size={52} />
+              <p>Upload a dermoscopy image and press Analyze to see results.</p>
+            </div>
+          )}
 
           {binaryResult && (
             <div className="card">

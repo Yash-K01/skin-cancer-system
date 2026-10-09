@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { submitNewCase } from "../api/endpoints";
+import Logo from "../components/Logo";
 
 export default function NewCase() {
   const navigate = useNavigate();
@@ -46,80 +47,94 @@ export default function NewCase() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card wide">
-        <h1>New Case Submission</h1>
-        <p className="subtitle">
-          For lesions the model could not classify. Requires lab confirmation.
-        </p>
+    <div className="page">
+      <header className="topbar">
+        <h1 className="brand">
+          <Logo size={34} />
+          <span>Skin Cancer Detection</span>
+        </h1>
+        <Link to="/predict" className="link-btn">Back</Link>
+      </header>
 
-        {error && <div className="error">{error}</div>}
+      <main className="form-layout">
+        <div className="card form-card">
+          <h2 className="page-title">New Case Submission</h2>
+          <p className="subtitle">
+            For lesions the model could not classify. Requires lab confirmation.
+          </p>
 
-        <form onSubmit={handleSubmit}>
-          <label>
-            Image (if not already attached)
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleFile(e.target.files[0])}
-            />
-          </label>
-          {preview && <img src={preview} alt="preview" className="preview" />}
+          {error && <div className="error">{error}</div>}
 
-          <label>
-            Lab-Confirmed Label *
-            <input
-              type="text"
-              value={form.lab_confirmed_label}
-              onChange={(e) => setForm({ ...form, lab_confirmed_label: e.target.value })}
-              required
-            />
-          </label>
-          <label>
-            Patient Age
-            <input
-              type="number"
-              value={form.patient_age}
-              onChange={(e) => setForm({ ...form, patient_age: e.target.value })}
-            />
-          </label>
-          <label>
-            Patient Sex
-            <select
-              value={form.patient_sex}
-              onChange={(e) => setForm({ ...form, patient_sex: e.target.value })}
-            >
-              <option value="">—</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-          <label>
-            Lesion Site
-            <input
-              type="text"
-              value={form.lesion_site}
-              onChange={(e) => setForm({ ...form, lesion_site: e.target.value })}
-            />
-          </label>
-          <label>
-            Clinical Notes
-            <textarea
-              value={form.clinical_notes}
-              onChange={(e) => setForm({ ...form, clinical_notes: e.target.value })}
-              rows={4}
-            />
-          </label>
-          <button type="submit" disabled={loading}>
-            {loading ? "Submitting..." : "Submit Case"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit}>
+            <label>
+              Image (if not already attached)
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFile(e.target.files[0])}
+              />
+            </label>
+            {preview && <img src={preview} alt="preview" className="preview" />}
 
-        <p className="footer">
-          <Link to="/predict">Back to Predict</Link>
-        </p>
-      </div>
+            <label>
+              Lab-Confirmed Label *
+              <input
+                type="text"
+                value={form.lab_confirmed_label}
+                onChange={(e) => setForm({ ...form, lab_confirmed_label: e.target.value })}
+                required
+              />
+            </label>
+
+            <div className="form-row">
+              <label>
+                Patient Age
+                <input
+                  type="number"
+                  value={form.patient_age}
+                  onChange={(e) => setForm({ ...form, patient_age: e.target.value })}
+                />
+              </label>
+              <label>
+                Patient Sex
+                <select
+                  value={form.patient_sex}
+                  onChange={(e) => setForm({ ...form, patient_sex: e.target.value })}
+                >
+                  <option value="">—</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+            </div>
+
+            <label>
+              Lesion Site
+              <input
+                type="text"
+                value={form.lesion_site}
+                onChange={(e) => setForm({ ...form, lesion_site: e.target.value })}
+              />
+            </label>
+            <label>
+              Clinical Notes
+              <textarea
+                value={form.clinical_notes}
+                onChange={(e) => setForm({ ...form, clinical_notes: e.target.value })}
+                rows={4}
+              />
+            </label>
+            <button type="submit" disabled={loading}>
+              {loading ? "Submitting..." : "Submit Case"}
+            </button>
+          </form>
+
+          <p className="footer">
+            <Link to="/predict">Back to Predict</Link>
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
