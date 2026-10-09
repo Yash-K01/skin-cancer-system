@@ -1,12 +1,7 @@
 import { useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import {
-  predict7Class,
-  predictBinary,
-  explain7Class,
-  submitFeedback,
-} from "../api/endpoints";
+import { predict7Class, predictBinary, submitFeedback } from "../api/endpoints";
 import ProbabilityChart from "../components/ProbabilityChart";
 import Logo from "../components/Logo";
 
@@ -17,8 +12,8 @@ export default function Predict() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [binaryResult, setBinaryResult] = useState(null);
-  const [saliency, setSaliency] = useState(null);
   const [error, setError] = useState("");
+  const [prescription, setPrescription] = useState("");
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -29,8 +24,8 @@ export default function Predict() {
     setPreview(URL.createObjectURL(f));
     setResult(null);
     setBinaryResult(null);
-    setSaliency(null);
     setError("");
+    setPrescription("");
   };
 
   const handlePredict = async () => {
@@ -44,21 +39,12 @@ export default function Predict() {
       ]);
       setResult(r7.data);
       setBinaryResult(rBin.data);
+
+      // Placeholder for NVIDIA AI prescription generation
+      // const rx = await generatePrescription({ prediction: r7.data, binary: rBin.data });
+      // setPrescription(rx);
     } catch (err) {
       setError(err.response?.data?.detail || "Prediction failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleExplain = async () => {
-    if (!file) return;
-    setLoading(true);
-    try {
-      const r = await explain7Class(file);
-      setSaliency(r.data.saliency_png_b64);
-    } catch (err) {
-      setError(err.response?.data?.detail || "Explain failed");
     } finally {
       setLoading(false);
     }
@@ -86,7 +72,7 @@ export default function Predict() {
       <header className="topbar">
         <h1 className="brand">
           <Logo size={34} />
-          <span>Skin Cancer Detection</span>
+          <span>DermaScan — Clinical Triage</span>
         </h1>
         <div>
           <span className="user-chip">{user?.email}</span>
@@ -98,10 +84,13 @@ export default function Predict() {
       </header>
 
       <main className="predict-layout">
+        {/* ---------- LEFT: UPLOAD ---------- */}
         <section className="upload-panel">
-          <h2>Upload Dermoscopy Image</h2>
+          <div className="panel-head">
+            <h2>Patient Image</h2>
+            <p className="panel-sub">Dermoscopy · 224×224 recommended</p>
+          </div>
 
-          {/* Hidden inputs */}
           <input
             ref={fileInputRef}
             type="file"
@@ -118,7 +107,6 @@ export default function Predict() {
             style={{ display: "none" }}
           />
 
-          {/* Two option buttons */}
           <div className="upload-options">
             <button
               type="button"
@@ -139,36 +127,56 @@ export default function Predict() {
           </div>
 
           {preview ? (
-            <img src={preview} alt="preview" className="preview" />
+            <div className="preview-wrap">
+              <img src={preview} alt="preview" className="preview" />
+              <span className="preview-badge">Ready for analysis</span>
+            </div>
           ) : (
-            <div className="preview-empty">No image selected</div>
+            <div className="preview-empty">
+              <span>No image selected</span>
+              <small>Use Live Photo or Select Image above</small>
+            </div>
           )}
 
-          <div className="actions">
-            <button onClick={handlePredict} disabled={!file || loading}>
-              {loading ? "Analyzing..." : "Analyze"}
-            </button>
-            <button onClick={handleExplain} disabled={!file || loading} className="secondary">
-              Show Saliency
-            </button>
-          </div>
+          <button
+            className="analyze-btn"
+            onClick={handlePredict}
+            disabled={!file || loading}
+          >
+            {loading ? "Analyzing..." : "Analyze"}
+          </button>
         </section>
 
+        {/* ---------- RIGHT: RESULTS ---------- */}
         <section className="result-panel">
-          {error && <div className="error">{error}</div>}
+          {error && (
+            <div className="error-toast">
+              <div className="error-icon">!</div>
+              <div className="error-body">
+                <strong>Image rejected</strong>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
 
           {!result && !binaryResult && !error && (
             <div className="card empty-state">
               <Logo size={52} />
-              <p>Upload a dermoscopy image and press Analyze to see results.</p>
+              <p>Upload a dermoscopy image to begin clinical triage.</p>
             </div>
           )}
 
           {binaryResult && (
             <div className="card">
-              <h3>Binary Triage</h3>
+              <div className="card-head">
+                <h3>Malignant / Benign Triage</h3>
+                <span className="card-sub">DenseNet201 · binary</span>
+              </div>
               <div className={`verdict ${binaryResult.predicted_class.toLowerCase()}`}>
-                {binaryResult.predicted_class} — {(binaryResult.confidence * 100).toFixed(1)}%
+                {binaryResult.predicted_class}
+                <span className="verdict-conf">
+                  {(binaryResult.confidence * 100).toFixed(1)}%
+                </span>
               </div>
             </div>
           )}
@@ -176,15 +184,22 @@ export default function Predict() {
           {result && (
             <>
               <div className="card">
-                <h3>7-Class Prediction</h3>
+                <div className="card-head">
+                  <h3>7-Class Lesion Classification</h3>
+                  <span className="card-sub">DenseNet121 · HAM10000</span>
+                </div>
+
                 <div className={`verdict ${result.status}`}>
-                  {result.predicted_class} — {(result.confidence * 100).toFixed(1)}%
+                  {result.predicted_class}
+                  <span className="verdict-conf">
+                    {(result.confidence * 100).toFixed(1)}%
+                  </span>
                 </div>
 
                 {isUncertain && (
                   <div className="warning">
-                    Model is uncertain ({result.reason}).
-                    Please review carefully or submit as new case.
+                    Low confidence — model is uncertain ({result.reason}).
+                    Please review carefully or submit as a new case.
                   </div>
                 )}
 
@@ -206,16 +221,29 @@ export default function Predict() {
                 </div>
               </div>
 
-              {saliency && (
-                <div className="card">
-                  <h3>Saliency Map (Occlusion Sensitivity)</h3>
-                  <img
-                    src={`data:image/png;base64,${saliency}`}
-                    alt="saliency"
-                    className="saliency-img"
-                  />
+              {/* ---------- PRESCRIPTION PANEL (NVIDIA AI placeholder) ---------- */}
+              <div className="card prescription-card">
+                <div className="card-head">
+                  <h3>Suggested Prescription</h3>
+                  <span className="card-sub">AI-generated · requires physician review</span>
                 </div>
-              )}
+
+                {prescription ? (
+                  <div className="prescription-body">
+                    <pre>{prescription}</pre>
+                  </div>
+                ) : (
+                  <div className="prescription-empty">
+                    <p>
+                      A draft prescription will appear here after analysis using
+                      the NVIDIA AI clinical endpoint.
+                    </p>
+                    <p className="prescription-note">
+                      ⚕ For research use only — not a substitute for a licensed physician.
+                    </p>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </section>
