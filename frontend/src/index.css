@@ -666,3 +666,128 @@ a { color: var(--primary); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* ============================================================
+   Auth brand panel (left side of login / register)
+   ============================================================ */
+
+.auth-brand {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 48px 44px;
+  color: #ffffff;
+  background-color: #0b2447;
+  /* Doctor / medical background image */
+  background-image: url("https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=1400&q=80");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Dark medical-tone overlay so text stays readable */
+.auth-brand-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(11, 36, 71, 0.88) 0%,
+    rgba(30, 58, 138, 0.78) 55%,
+    rgba(8, 145, 178, 0.72) 100%
+  );
+  z-index: 1;
+}
+
+.auth-brand-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+}
+
+.auth-brand-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.auth-brand-top h2 {
+  font-family: "Playfair Display", "Georgia", serif;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  margin: 0;
+}
+
+.auth-brand-middle {
+  margin-top: auto;
+  margin-bottom: auto;
+  max-width: 420px;
+}
+
+.brand-tagline {
+  font-family: "Playfair Display", "Georgia", serif;
+  font-size: 22px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #f0f9ff;
+  margin-bottom: 22px;
+}
+
+.brand-points {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.brand-points li {
+  font-family: "Inter", "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  color: #e0f2fe;
+  padding: 8px 0 8px 26px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.brand-points li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #67e8f9;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.auth-brand-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding-top: 18px;
+}
+
+.brand-quote {
+  font-family: "Playfair Display", "Georgia", serif;
+  font-style: italic;
+  font-size: 15px;
+  color: #bae6fd;
+  margin-bottom: 8px;
+}
+
+.brand-credit {
+  font-family: "Inter", "Helvetica Neue", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+/* Mobile: hide the left panel entirely (already in your existing CSS if you have a rule) */
+@media (max-width: 900px) {
+  .auth-brand {
+    display: none;
+  }
+}
