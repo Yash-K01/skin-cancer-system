@@ -39,6 +39,11 @@ export const submitNewCase = (formData) =>
     headers: { "Content-Type": "multipart/form-data" },
   });
 
+  export const generatePrescription = (predictionId) =>
+  api.post("/predict/prescription", null, {
+    params: { prediction_id: predictionId },
+  });
+
 export const listPendingCases = () => api.get("/admin/pending_cases");
 export const approveCase = (id) => api.post(`/admin/approve_case/${id}`);
 export const getRetrainingQueue = () => api.get("/admin/retraining_queue");

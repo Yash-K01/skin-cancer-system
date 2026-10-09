@@ -10,6 +10,7 @@ from app.ml.inference import (predict_7class_with_gate, predict_binary,
                               occlusion_sensitivity)
 from app.routers.auth import get_current_user
 from app.config import settings
+from app.ml.prescription import generate_prescription
 
 router = APIRouter(prefix="/predict", tags=["predict"])
 
@@ -131,3 +132,31 @@ def debug_validate(file: UploadFile = File(...)):
             "confidence": float(probs.max()),
         },
     }
+
+@router.post("/prescription")
+def get_prescription(
+    prediction_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    pred = db.query(Prediction).filter(Prediction.id == prediction_id).first()
+    if not pred:
+        raise HTTPException(404, "Prediction not found")
+    if pred.user_id != user.id:
+        raise HTTPException(403, "Not your prediction")
+
+    # Recover the binary side, if you stored it alongside (optional)
+    binary_label = "Malignant" if pred.predicted_class in ("mel","bcc","akiec") else "Benign"
+    binary_conf = pred.confidence or 0.0
+
+    try:
+        text = generate_prescription(
+            predicted_class=pred.predicted_class,
+            confidence=pred.confidence or 0.0,
+            binary_label=binary_label,
+            binary_confidence=binary_conf,
+        )
+    except Exception as e:
+        raise HTTPException(500, f"Prescription generation failed: {e}")
+
+    return {"prediction_id": pred.id, "prescription": text}

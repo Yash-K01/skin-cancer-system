@@ -100,6 +100,12 @@ export default function Predict() {
         predictBinary(file),
       ]);
       setResult(r7.data);
+      try {
+        const rx = await generatePrescription(r7.data.prediction_id);
+        setPrescription(rx.data.prescription);
+      } catch (e) {
+        setPrescription("");
+      }
       setBinaryResult(rBin.data);
     } catch (err) {
       const raw = err.response?.data?.detail || "Prediction failed";
