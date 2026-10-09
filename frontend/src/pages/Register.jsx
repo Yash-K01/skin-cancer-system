@@ -33,7 +33,15 @@ export default function Register() {
 
   return (
     <div className="auth-split">
-      <AuthBrand />
+      <AuthBrand
+        tagline="Join the clinical network improving early skin cancer outcomes"
+        points={[
+          "Free for verified dermatologists",
+          "Secure HIPAA-aligned storage",
+          "Human-in-the-loop case review",
+          "Publishable research dashboard",
+        ]}
+      />
 
       <div className="auth-container">
         <div className="auth-card">
