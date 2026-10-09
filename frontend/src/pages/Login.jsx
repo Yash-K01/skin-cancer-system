@@ -28,7 +28,15 @@ export default function Login() {
 
   return (
     <div className="auth-split">
-      <AuthBrand />
+      <AuthBrand
+        tagline="AI-assisted dermoscopy triage for early skin cancer detection"
+        points={[
+          "7-class HAM10000 classifier",
+          "Binary benign / malignant triage",
+          "Explainable AI with saliency maps",
+          "Human-in-the-loop case collection",
+        ]}
+      />
 
       <div className="auth-container">
         <div className="auth-card">
