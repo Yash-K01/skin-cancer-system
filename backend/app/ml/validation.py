@@ -59,7 +59,7 @@ def check_skin_like_colors(path, min_skin_ratio=0.20):
     return True, "ok"
 
 
-def check_ood(feature_vector, threshold=6000.0):
+def check_ood(feature_vector, threshold=12000):
     mean, precision = _load_ood()
     if mean is None or precision is None:
         return True, "ok (no OOD model)"
