@@ -15,17 +15,18 @@ export default function NewCase() {
     lesion_site: "",
     clinical_notes: "",
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleFile = (f) => {
+    if (!f) return;
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError(null);
     setLoading(true);
     try {
       const fd = new FormData();
@@ -40,30 +41,48 @@ export default function NewCase() {
       alert("New case submitted. Pending admin approval.");
       navigate("/predict");
     } catch (err) {
-      setError(err.response?.data?.detail || "Submission failed");
+      setError({
+        title: "Submission failed",
+        detail: err.response?.data?.detail || "Please check your input and try again.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page">
+    <div className="page page-clinical">
       <header className="topbar">
         <h1 className="brand">
           <Logo size={34} />
-          <span>Skin Cancer Detection</span>
+          <span>New Case Submission</span>
         </h1>
         <Link to="/predict" className="link-btn">Back</Link>
       </header>
 
       <main className="form-layout">
-        <div className="card form-card">
+        <div className="card card-3d form-card">
           <h2 className="page-title">New Case Submission</h2>
           <p className="subtitle">
             For lesions the model could not classify. Requires lab confirmation.
           </p>
 
-          {error && <div className="error">{error}</div>}
+          {error && (
+            <div className="error-toast" role="alert">
+              <div className="error-icon">!</div>
+              <div className="error-body">
+                <strong>{error.title}</strong>
+                <span>{error.detail}</span>
+              </div>
+              <button
+                className="error-close"
+                onClick={() => setError(null)}
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <label>
@@ -117,6 +136,7 @@ export default function NewCase() {
                 onChange={(e) => setForm({ ...form, lesion_site: e.target.value })}
               />
             </label>
+
             <label>
               Clinical Notes
               <textarea
@@ -125,6 +145,7 @@ export default function NewCase() {
                 rows={4}
               />
             </label>
+
             <button type="submit" disabled={loading}>
               {loading ? "Submitting..." : "Submit Case"}
             </button>
