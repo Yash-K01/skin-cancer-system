@@ -242,3 +242,35 @@ body {
 
 /* ---- Vite default override ---- */
 #root { min-height: 100vh; }
+
+/* Upload option buttons */
+.upload-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.upload-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px 12px;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e3a8a;
+  transition: all 0.15s;
+}
+.upload-option:hover {
+  background: #eff6ff;
+  border-color: #1e3a8a;
+}
+.upload-icon {
+  font-size: 26px;
+  line-height: 1;
+}

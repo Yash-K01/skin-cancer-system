@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import {
@@ -19,7 +19,11 @@ export default function Predict() {
   const [saliency, setSaliency] = useState(null);
   const [error, setError] = useState("");
 
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+
   const handleFile = (f) => {
+    if (!f) return;
     setFile(f);
     setPreview(URL.createObjectURL(f));
     setResult(null);
@@ -92,14 +96,48 @@ export default function Predict() {
       <main className="predict-layout">
         <section className="upload-panel">
           <h2>Upload Dermoscopy Image</h2>
+
+          {/* Hidden inputs */}
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={(e) => handleFile(e.target.files[0])}
+            style={{ display: "none" }}
           />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => handleFile(e.target.files[0])}
+            style={{ display: "none" }}
+          />
+
+          {/* Two option buttons */}
+          <div className="upload-options">
+            <button
+              type="button"
+              className="upload-option"
+              onClick={() => cameraInputRef.current?.click()}
+            >
+              <span className="upload-icon">📷</span>
+              <span>Live Photo</span>
+            </button>
+            <button
+              type="button"
+              className="upload-option"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <span className="upload-icon">🖼️</span>
+              <span>Select Image</span>
+            </button>
+          </div>
+
           {preview && (
             <img src={preview} alt="preview" className="preview" />
           )}
+
           <div className="actions">
             <button onClick={handlePredict} disabled={!file || loading}>
               {loading ? "Analyzing..." : "Analyze"}
