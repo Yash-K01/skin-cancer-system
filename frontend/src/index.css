@@ -1118,3 +1118,179 @@ a { color: var(--primary); }
     animation: none !important;
   }
 }
+
+/* ============================================================
+   Admin page — refined
+   ============================================================ */
+
+/* Auto-dismiss success toast */
+@keyframes actionSlideIn {
+  0%   { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.action-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 1px solid #a7f3d0;
+  border-left: 4px solid #16a34a;
+  border-radius: 12px;
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 6px 16px -6px rgba(22, 163, 74, 0.4);
+  animation: actionSlideIn 0.35s ease both;
+}
+.action-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Muted helper text */
+.admin-layout .muted {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  margin-bottom: 14px;
+}
+
+/* Case row — refined with two-line layout */
+.case-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 12px;
+  border-radius: var(--radius-sm);
+  border-bottom: 1px solid var(--border);
+  background: #ffffff;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.case-row:last-child { border-bottom: none; }
+.case-row:hover {
+  background: #f8fbfc;
+  transform: translateX(2px);
+  box-shadow: inset 3px 0 0 var(--primary-border);
+}
+.case-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.case-id {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}
+.case-label {
+  align-self: flex-start;
+  padding: 2px 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* Thumbnail */
+.thumb {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 2px solid #fff;
+  box-shadow:
+    0 4px 10px -2px rgba(15, 23, 42, 0.22),
+    0 12px 20px -8px rgba(15, 23, 42, 0.18);
+  background: #f1f5f7;
+}
+
+/* Primary action inside case row */
+.case-row button {
+  margin-left: auto;
+  padding: 9px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f7 100%);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    0 1px 0 #fff inset,
+    0 3px 0 var(--primary-border),
+    0 8px 14px -6px rgba(15, 118, 110, 0.3);
+  transition: all 0.12s ease;
+  cursor: pointer;
+}
+.case-row button:hover {
+  background: linear-gradient(180deg, var(--primary-light) 0%, var(--primary) 100%);
+  color: #fff;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 4px 0 var(--primary-dark),
+    0 10px 16px -4px rgba(15, 118, 110, 0.45);
+}
+.case-row button:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 1px 0 var(--primary-dark),
+    0 3px 6px -2px rgba(15, 118, 110, 0.4);
+}
+
+/* Retrain trigger button — full-width raised */
+.trigger-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #fff;
+  background: linear-gradient(180deg, var(--primary-light) 0%, var(--primary) 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 5px 0 var(--primary-dark),
+    0 14px 22px -8px rgba(15, 118, 110, 0.5);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s;
+}
+.trigger-btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.trigger-btn:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 1px 0 var(--primary-dark),
+    0 4px 8px -2px rgba(15, 118, 110, 0.4);
+}
+.trigger-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: 0 2px 0 var(--primary-dark);
+}
+
+/* Stats numbers — slightly larger, tighter */
+.admin-layout .stat-num {
+  font-size: 36px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}

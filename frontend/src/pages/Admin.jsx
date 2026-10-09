@@ -8,10 +8,13 @@ import {
 } from "../api/endpoints";
 import Logo from "../components/Logo";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 export default function Admin() {
   const [pending, setPending] = useState([]);
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [actionMsg, setActionMsg] = useState(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -32,16 +35,24 @@ export default function Admin() {
 
   const handleApprove = async (id) => {
     await approveCase(id);
+    setActionMsg(`Case #${id} approved and moved to retraining queue.`);
     refresh();
+    setTimeout(() => setActionMsg(null), 4000);
   };
 
   const handleTrigger = async () => {
     const r = await triggerRetrain();
-    alert(`Ready for retrain: ${r.data.ready_for_retrain}`);
+    setActionMsg(`Ready for retrain: ${r.data.ready_for_retrain} case(s).`);
+    setTimeout(() => setActionMsg(null), 4000);
+  };
+
+  const imageUrl = (path) => {
+    const name = path.split(/[\\/]/).pop();
+    return `${API_BASE}/uploads/${name}`;
   };
 
   return (
-    <div className="page">
+    <div className="page page-clinical">
       <header className="topbar">
         <h1 className="brand">
           <Logo size={34} />
@@ -51,40 +62,69 @@ export default function Admin() {
       </header>
 
       <main className="admin-layout">
+        {actionMsg && (
+          <div className="action-toast">
+            <span className="action-icon">✓</span>
+            <span>{actionMsg}</span>
+          </div>
+        )}
+
         <div className="stats">
-          <div className="stat">
+          <div className="stat card-3d">
             <span className="stat-num">{pending.length}</span>
             <span className="stat-label">Pending cases</span>
           </div>
-          <div className="stat">
+          <div className="stat card-3d">
             <span className="stat-num">{queue.length}</span>
             <span className="stat-label">In retraining queue</span>
           </div>
         </div>
 
-        <section className="card">
-          <h2>Pending New Cases</h2>
-          {loading && <p>Loading...</p>}
-          {pending.length === 0 && <p>No pending cases.</p>}
+        <section className="card card-3d">
+          <div className="card-head">
+            <h3>Pending New Cases</h3>
+            <span className="card-sub">awaiting admin approval</span>
+          </div>
+
+          {loading && <p className="muted">Loading...</p>}
+          {!loading && pending.length === 0 && (
+            <p className="muted">No pending cases.</p>
+          )}
+
           {pending.map((c) => (
             <div key={c.id} className="case-row">
               <img
-                src={`http://127.0.0.1:8000/uploads/${c.image.split(/[\\/]/).pop()}`}
+                src={imageUrl(c.image)}
                 alt="case"
                 className="thumb"
                 onError={(e) => { e.target.style.display = "none"; }}
               />
-              <span className="case-id">Case #{c.id}</span>
-              <span className="case-label">{c.label}</span>
+              <div className="case-meta">
+                <span className="case-id">Case #{c.id}</span>
+                <span className="case-label">{c.label}</span>
+              </div>
               <button onClick={() => handleApprove(c.id)}>Approve</button>
             </div>
           ))}
         </section>
 
-        <section className="card">
-          <h2>Retraining Queue</h2>
-          <p>{queue.length} case(s) ready for retraining.</p>
-          <button onClick={handleTrigger}>Trigger Retrain (manual)</button>
+        <section className="card card-3d">
+          <div className="card-head">
+            <h3>Retraining Queue</h3>
+            <span className="card-sub">manual trigger only</span>
+          </div>
+          <p className="muted">
+            {queue.length} case(s) ready for retraining. The model does not
+            retrain automatically — an administrator must trigger a training
+            cycle offline.
+          </p>
+          <button
+            className="trigger-btn"
+            onClick={handleTrigger}
+            disabled={queue.length === 0}
+          >
+            Trigger Retrain (manual)
+          </button>
         </section>
       </main>
     </div>
