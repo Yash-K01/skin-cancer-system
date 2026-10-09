@@ -18,7 +18,7 @@ def _load_ood():
 
 def check_image_quality(path,
                         min_size=64,
-                        min_sharpness=100,
+                        min_sharpness=30,
                         min_brightness=40,
                         max_brightness=220):
     img = cv2.imread(path)
