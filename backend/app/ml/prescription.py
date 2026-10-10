@@ -72,63 +72,58 @@ def generate_prescription(predicted_class: str,
     patient_summary = ", ".join(patient_bits) if patient_bits else "not specified"
 
     system_prompt = (
-        "You are writing a patient-friendly skin care prescription in simple "
-        "English that a non-medical person can understand. No jargon. "
-        "Short sentences. Clear headings. Never mention AI or the model. "
-        "Your goal is to tell the patient exactly what they have, what they "
-        "must do, what to avoid, what to eat, and which products to use."
+        "You are a dermatologist writing a plain-English prescription for a "
+        "patient. Output ONLY the final prescription text. "
+        "Do NOT output your reasoning, notes, drafts, checklists, or any "
+        "meta-commentary. Do NOT use markdown, asterisks, hash symbols, or "
+        "bullet points. Use plain sentences and simple headings in ALL CAPS "
+        "followed by a colon. Never mention AI, the model, or that you are "
+        "an assistant. Write as if handing the note directly to the patient."
     )
 
-    user_prompt = f"""A patient has been evaluated by dermoscopy.
+    user_prompt = f"""Write a skin care prescription for a patient.
 
-Findings:
-  Diagnosis       : {disease} ({predicted_class})
-  Risk category   : {binary_label}
-  Model confidence: {confidence:.1%}
-  Patient         : {patient_summary}
+Diagnosis: {disease}
+Risk: {binary_label}
+Confidence: {confidence:.1%}
+Patient: {patient_summary}
 
-Write the prescription in EXACTLY this format. Every section must have
-at least 2–4 sentences. Do not use bullet points shorter than a full
-sentence. Do not skip any section.
+Use exactly these nine headings, in this order, each on its own line
+in ALL CAPS followed by a colon. Under each heading write 2 to 4 plain
+sentences. No markdown. No asterisks. No bullet points. No numbered
+sublists. No notes about what you are doing.
 
-1. WHAT YOU HAVE
-   Explain the diagnosis ({disease}) in one or two plain sentences.
-   Say whether it is {"serious and needs urgent care" if is_malignant else "usually harmless and does not need to be removed"}.
+WHAT YOU HAVE:
+Explain in two short sentences what {disease} is. Say whether it is
+{"serious and needs urgent care" if is_malignant else "usually harmless"}.
 
-2. WHAT THIS MEANS FOR YOU
-   Explain what will happen next in simple terms. {"This needs a small procedure to remove a sample for testing. Your doctor will refer you quickly." if is_malignant else "This can be left alone and simply watched over time. It is not dangerous."}
+WHAT THIS MEANS FOR YOU:
+Explain the next step. {"A small sample will be removed for testing. Your doctor will arrange this quickly." if is_malignant else "This can usually be left alone and simply watched over time."}
 
-3. WHAT YOU SHOULD DO
-   Give 3–5 concrete actions. Examples: keep the area clean and dry, do
-   not scratch or pick the lesion, take clear photos every month to
-   track changes, avoid sharing towels, etc.
+WHAT YOU SHOULD DO:
+List 3 to 5 things to do, each as a full sentence.
 
-4. WHAT YOU SHOULD AVOID
-   List what not to do. Examples: avoid direct sun on the lesion, do
-   not use home remedies, do not apply unknown creams, do not shave
-   over the area, avoid tight clothing rubbing on it.
+WHAT YOU SHOULD AVOID:
+List 3 to 5 things to avoid, each as a full sentence.
 
-5. FOOD AND DRINK
-   Suggest foods that support skin health: leafy greens, tomatoes,
-   carrots, berries, nuts, fatty fish, plenty of water. Suggest what to
-   limit: sugary drinks, fried food, excess alcohol. Keep it practical.
+FOOD AND DRINK:
+Suggest foods that help the skin and foods to limit. Full sentences only.
 
-6. SOAP, CREAM AND PRODUCTS TO USE
-   Recommend specific types of products with generic names. Examples:
-   a mild fragrance-free cleanser (Cetaphil, CeraVe, or similar),
-   a broad-spectrum sunscreen SPF 50+, a simple moisturiser, and if
-   relevant a prescribed topical medicine with strength and how often
-   to apply it. {"No topical medicine should be applied until the biopsy is done." if is_malignant else "No prescription medicine is required for this lesion."}
+SOAP, CREAM AND PRODUCTS TO USE:
+Recommend specific types of products with common brand names. If a
+prescription cream is needed, give its name, strength, and how often
+to apply. {"No prescription cream should be used until the biopsy is complete." if is_malignant else "No prescription cream is needed for this lesion."}
 
-7. SUN PROTECTION
-   Explain how to protect the skin: SPF 50+, reapply every 2 hours,
-   wide-brimmed hat, long sleeves, avoid 11 am – 4 pm sun.
+SUN PROTECTION:
+Explain sunscreen and clothing protection in 3 to 4 sentences.
 
-8. WHEN TO RETURN TO THE DOCTOR
-   {"Return within 2 weeks for the biopsy results. Go to the emergency department immediately if the lesion bleeds, grows quickly, or becomes painful." if is_malignant else "Return in 6–12 months for a routine check, or sooner if the mole changes in size, shape, colour, or starts to itch or bleed."}
+WHEN TO RETURN TO THE DOCTOR:
+State a clear follow-up window and any warning signs that need urgent review. {"Return within 2 weeks for biopsy results. Go to the emergency department if the lesion bleeds, grows quickly, or becomes painful." if is_malignant else "Return in 6 to 12 months, or sooner if the mole changes in size, shape, colour, or starts to itch or bleed."}
 
-9. DISCLAIMER
-   Exactly this line: "This is a computer-generated draft. It must be reviewed and approved by your doctor before use."
+DISCLAIMER:
+Write exactly this sentence: This is a computer-generated draft. It must be reviewed and approved by your doctor before use.
+
+Begin immediately with "WHAT YOU HAVE:". Do not write anything before it.
 """
 
     try:
