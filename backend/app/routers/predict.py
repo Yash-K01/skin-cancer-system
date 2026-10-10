@@ -2,6 +2,7 @@ import os
 import uuid
 import shutil
 import numpy as np
+import traceback
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -106,8 +107,11 @@ def get_prescription(prediction_id: int,
             binary_confidence=binary_conf,
         )
     except Exception as e:
+        print("=" * 60)
+        print("[PRESCRIPTION ERROR]", repr(e))
+        traceback.print_exc()
+        print("=" * 60)
         raise HTTPException(500, f"Prescription generation failed: {e}")
-
     return {"prediction_id": pred.id, "prescription": text}
 
 
