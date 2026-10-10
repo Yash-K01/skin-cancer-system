@@ -31,17 +31,17 @@ export const explain7Class = (file) => {
   return api.post("/predict/7class/explain", form);
 };
 
+export const generatePrescription = (predictionId) =>
+  api.post("/predict/prescription", null, {
+    params: { prediction_id: predictionId },
+  });
+
 export const submitFeedback = (data) =>
   api.post("/feedback/", data);
 
 export const submitNewCase = (formData) =>
   api.post("/new_case/submit", formData, {
     headers: { "Content-Type": "multipart/form-data" },
-  });
-
-  export const generatePrescription = (predictionId) =>
-  api.post("/predict/prescription", null, {
-    params: { prediction_id: predictionId },
   });
 
 export const listPendingCases = () => api.get("/admin/pending_cases");

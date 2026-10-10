@@ -84,9 +84,35 @@ def explain_7class(file: UploadFile = File(...),
     return occlusion_sensitivity(path, model_name="7class")
 
 
+@router.post("/prescription")
+def get_prescription(prediction_id: int,
+                     db: Session = Depends(get_db),
+                     user: User = Depends(get_current_user)):
+    pred = db.query(Prediction).filter(Prediction.id == prediction_id).first()
+    if not pred:
+        raise HTTPException(404, "Prediction not found")
+    if pred.user_id != user.id:
+        raise HTTPException(403, "Not your prediction")
+
+    MALIGNANT = {"mel", "bcc", "akiec"}
+    binary_label = "Malignant" if pred.predicted_class in MALIGNANT else "Benign"
+    binary_conf = pred.confidence or 0.0
+
+    try:
+        text = generate_prescription(
+            predicted_class=pred.predicted_class,
+            confidence=pred.confidence or 0.0,
+            binary_label=binary_label,
+            binary_confidence=binary_conf,
+        )
+    except Exception as e:
+        raise HTTPException(500, f"Prescription generation failed: {e}")
+
+    return {"prediction_id": pred.id, "prescription": text}
+
+
 @router.post("/debug/validate")
 def debug_validate(file: UploadFile = File(...)):
-    """Temporary: shows the raw scores of every gate."""
     from app.ml.validation import check_image_quality, check_skin_like_colors, check_ood
     from app.ml.inference import _preprocess, _run
     from app.ml.loader import get_model
@@ -132,31 +158,3 @@ def debug_validate(file: UploadFile = File(...)):
             "confidence": float(probs.max()),
         },
     }
-
-@router.post("/prescription")
-def get_prescription(
-    prediction_id: int,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    pred = db.query(Prediction).filter(Prediction.id == prediction_id).first()
-    if not pred:
-        raise HTTPException(404, "Prediction not found")
-    if pred.user_id != user.id:
-        raise HTTPException(403, "Not your prediction")
-
-    # Recover the binary side, if you stored it alongside (optional)
-    binary_label = "Malignant" if pred.predicted_class in ("mel","bcc","akiec") else "Benign"
-    binary_conf = pred.confidence or 0.0
-
-    try:
-        text = generate_prescription(
-            predicted_class=pred.predicted_class,
-            confidence=pred.confidence or 0.0,
-            binary_label=binary_label,
-            binary_confidence=binary_conf,
-        )
-    except Exception as e:
-        raise HTTPException(500, f"Prescription generation failed: {e}")
-
-    return {"prediction_id": pred.id, "prescription": text}

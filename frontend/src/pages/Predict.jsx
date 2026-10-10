@@ -1,7 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import { predict7Class, predictBinary, submitFeedback } from "../api/endpoints";
+import {
+  predict7Class,
+  predictBinary,
+  submitFeedback,
+  generatePrescription,
+} from "../api/endpoints";
 import ProbabilityChart from "../components/ProbabilityChart";
 import Logo from "../components/Logo";
 
@@ -60,6 +65,21 @@ function describeError(raw) {
   return { title: "Image rejected", detail: msg };
 }
 
+/* ---- Browser text-to-speech (no external library needed) ---- */
+function speakText(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 0.95;
+  utter.pitch = 1.0;
+  utter.lang = "en-US";
+  window.speechSynthesis.speak(utter);
+}
+
+function stopSpeaking() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
 export default function Predict() {
   const { user, logout } = useAuth();
   const [file, setFile] = useState(null);
@@ -69,6 +89,8 @@ export default function Predict() {
   const [binaryResult, setBinaryResult] = useState(null);
   const [error, setError] = useState(null);
   const [prescription, setPrescription] = useState("");
+  const [rxLoading, setRxLoading] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -80,6 +102,11 @@ export default function Predict() {
     return () => clearTimeout(t);
   }, [error]);
 
+  // Stop speaking when component unmounts
+  useEffect(() => {
+    return () => stopSpeaking();
+  }, []);
+
   const handleFile = (f) => {
     if (!f) return;
     setFile(f);
@@ -88,25 +115,37 @@ export default function Predict() {
     setBinaryResult(null);
     setError(null);
     setPrescription("");
+    stopSpeaking();
+    setSpeaking(false);
   };
 
   const handlePredict = async () => {
     if (!file) return;
     setLoading(true);
     setError(null);
+    setPrescription("");
+    stopSpeaking();
+    setSpeaking(false);
+
     try {
       const [r7, rBin] = await Promise.all([
         predict7Class(file),
         predictBinary(file),
       ]);
       setResult(r7.data);
+      setBinaryResult(rBin.data);
+
+      // Fetch prescription in the background
+      setRxLoading(true);
       try {
         const rx = await generatePrescription(r7.data.prediction_id);
-        setPrescription(rx.data.prescription);
+        setPrescription(rx.data.prescription || "");
       } catch (e) {
+        console.error("Prescription error:", e?.response?.data || e);
         setPrescription("");
+      } finally {
+        setRxLoading(false);
       }
-      setBinaryResult(rBin.data);
     } catch (err) {
       const raw = err.response?.data?.detail || "Prediction failed";
       setError(describeError(raw));
@@ -299,11 +338,52 @@ export default function Predict() {
                   <span className="card-sub">AI-generated · requires physician review</span>
                 </div>
 
-                {prescription ? (
-                  <div className="prescription-body">
-                    <pre>{prescription}</pre>
+                {rxLoading && (
+                  <div className="prescription-loading">
+                    <span className="spinner" />
+                    <span>Generating draft prescription…</span>
                   </div>
-                ) : (
+                )}
+
+                {!rxLoading && prescription && (
+                  <>
+                    <div className="prescription-body">
+                      <pre>{prescription}</pre>
+                    </div>
+
+                    <div className="prescription-actions">
+                      <button
+                        className="rx-btn"
+                        onClick={() => {
+                          speakText(prescription);
+                          setSpeaking(true);
+                        }}
+                        disabled={speaking}
+                      >
+                        🔊 Read Aloud
+                      </button>
+                      <button
+                        className="rx-btn secondary"
+                        onClick={() => {
+                          stopSpeaking();
+                          setSpeaking(false);
+                        }}
+                      >
+                        ⏹ Stop
+                      </button>
+                      <button
+                        className="rx-btn secondary"
+                        onClick={() => {
+                          navigator.clipboard.writeText(prescription);
+                        }}
+                      >
+                        📋 Copy
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {!rxLoading && !prescription && (
                   <div className="prescription-empty">
                     <p>
                       A draft prescription will appear here after analysis using
