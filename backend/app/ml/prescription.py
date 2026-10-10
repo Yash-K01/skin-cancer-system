@@ -2,7 +2,7 @@ import os
 from google import genai
 from google.genai import types
 
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3.8-flash"
 
 
 def _get_client():
@@ -82,7 +82,6 @@ Keep it clinical and concise.
         contents=user_prompt,
         config=types.GenerateContentConfig(
             system_instruction=system_prompt,
-            temperature=0.3,
             max_output_tokens=400,
         ),
     )
