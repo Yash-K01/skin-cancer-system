@@ -1,18 +1,17 @@
 import os
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
-NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
-NVIDIA_MODEL = "meta/llama-3.1-70b-instruct"   # change if you prefer another
+MODEL_NAME = "gemini-2.5-flash"
 
 
 def _get_client():
-    api_key = os.getenv("NVIDIA_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        raise RuntimeError("NVIDIA_API_KEY not set")
-    return OpenAI(base_url=NVIDIA_BASE_URL, api_key=api_key, timeout=30.0)
+        raise RuntimeError("GEMINI_API_KEY not set")
+    return genai.Client(api_key=api_key)
 
 
-# Human-readable class descriptions used inside the prompt
 CLASS_DESCRIPTIONS = {
     "mel":  "Melanoma — a malignant tumor of melanocytes. The most dangerous skin cancer; requires urgent biopsy and staging.",
     "bcc":  "Basal Cell Carcinoma — the most common skin cancer. Locally invasive but rarely metastasizes. Usually treated with surgical excision or topical therapy.",
@@ -32,7 +31,7 @@ def generate_prescription(predicted_class: str,
                           patient_sex: str = None,
                           lesion_site: str = None) -> str:
     """
-    Call NVIDIA NIM to produce a short clinical draft prescription.
+    Call Google Gemini to produce a short clinical draft prescription.
     """
     client = _get_client()
 
@@ -78,14 +77,14 @@ Produce a short draft prescription containing:
 Keep it clinical and concise.
 """
 
-    response = client.chat.completions.create(
-        model=NVIDIA_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user",   "content": user_prompt},
-        ],
-        temperature=0.3,
-        max_tokens=400,
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=user_prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            temperature=0.3,
+            max_output_tokens=400,
+        ),
     )
 
-    return response.choices[0].message.content.strip()
+    return response.text.strip()
